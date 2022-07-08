@@ -4,7 +4,13 @@
 
 ## 记录
 
-### Day2 2022/7/7
+### Day4 2022/7/8
+早上在看rcore的教程，下午去参加急救培训，晚上和老师同学交流讨论。
+
+同学们很强，我也要加快进度，赶快把blog_os和rcore过完，然后去选择一个有意思的题目做。
+想做点新的东西出来而不是练习性质地造别人造过的轮子。
+
+### Day3 2022/7/7
 跟着[训练营教程](https://learningos.github.io/rust-based-os-comp2022/)的第一章讲的内容自己倒腾了一遍，
 踩了一些坑，感觉和blog_os的开局差不多。
 
@@ -35,6 +41,8 @@
 - exception的分类和处理流程（重要）
 - Physical Memory Protection(PMP) 基于段的内存保护
 - S mode的delegate机制（重要）
+
+TODO: 写一篇文章总结riscv特权架构。
 
 看了一些riscv汇编的资料。
 
