@@ -4,6 +4,24 @@
 
 ## 记录
 
+### Day5 2022/7/9
+早上旁听了参加操作系统比赛的同学的交流会，感觉他们做的东西很厉害，自己不太懂。
+
+中午在研究怎么把rCore-Tutorial/os跑起来。
+main分支上的代码直接make run发现会卡在qemu运行里。
+
+研究了一会儿没明白，切到v3.5.0，出了一堆global_asm/llvm_asm相关的编译错误，用新的asm语法重写了以后跑起来了。
+
+usertests发现有一个测试panic unwrap none了，看了一下发现是allocator空间用完了，调大后运行正常。
+
+回去继续研究main分支为什么跑不起来，后来发现是自己刚好有qemu就把装qemu那步跳了，但是运行要求qemu7.0……更新了就好了。
+
+后面在看rCore的教程，第零章和第一章看完了，发现自己之前瞎看的时候的花了很多时间弄明白的疑惑在里面都有讲，比如rs/rd指啥、RV64GC指啥、执行环境的理解、exception/interrupt/trap的区别、链接器脚本（重要）什么意思。
+
+加深了对object file链接过程的理解，收获很大。
+
+感觉整体进度还是很慢，应该再加快一些。
+
 ### Day4 2022/7/8
 早上在看rcore的教程，下午去参加急救培训，晚上和老师同学交流讨论。
 
@@ -55,8 +73,12 @@ TODO: 写一篇文章总结riscv特权架构。
 参加训练营开幕式。
 
 
-
 ## 参考资料
+
+[RISC-V ELF psABI Document](https://github.com/riscv-non-isa/riscv-elf-psabi-doc)
+
+[RISC-V C Calling Convention](https://riscv.org/wp-content/uploads/2015/01/riscv-calling.pdf)
+
 ### spec
 https://riscv.org/technical/specifications/
 
@@ -64,7 +86,7 @@ https://riscv.org/technical/specifications/
 - [riscv privileged spec](https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf)
 
 ### 汇编
-- [riscv汇编参考](https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html)
-- [riscv汇编参考](https://shakti.org.in/docs/risc-v-asm-manual.pdf)
-- [riscv汇编参考](https://github.com/riscv-non-isa/riscv-asm-manual/blob/master/riscv-asm.md)
+- [riscv汇编参考 1](https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html)
+- [riscv汇编参考 2](https://shakti.org.in/docs/risc-v-asm-manual.pdf)
+- [riscv汇编参考 3](https://github.com/riscv-non-isa/riscv-asm-manual/blob/master/riscv-asm.md)
 
