@@ -3,6 +3,24 @@
 参加2022开源操作系统训练营的学习日记。
 
 ## 记录
+
+## Day10 2022/7/14
+
+
+### Day8-9 2022/7/12 - 2022/7/13
+间歇性堕落，荒废几天，状态很糟糕。
+
+But don't worry, I'll be fine.
+
+### Day7 2022/7/11
+早上和老师讨论了一下区块链放到内核里的想法。
+
+看了riscv sbi spec, 跳过了PMU及以后的内容。rustsbi看起来只是一个interface而不是一个implementation。
+
+于是又去看了rustsbi在qemu上的实现（rustsbi-qemu），在代码里看到了很多很有意思的细节，但是没有找到关于这些细节的qemu官方文档。
+
+看到rustsbi-qemu的注释里提到了clint，就又去找了最新的aclint spec看了一遍。里面的关于timer、software interrupt还有Register Map的内容，解释了rustsbi-qemu里看到的一些代码。
+
 ### Day6 2022/7/10
 - 看了看以往的操作系统选题，
 - 翻了翻zCore、RustSBI的实现。
@@ -12,7 +30,7 @@
 
 rCore教程的代码和练习都没跟着写，明天把这两天学的内容该写的代码全写了。
 
-也应该迅速把lab给弄完，不然对lab作业里的坑不熟悉，有同学问的话现场研究就慢了。今天就有同学问asm报错找不到的问题，我跟着Makefile走了一路发现是ci-user把项目的riscv依赖重写成本地的很老的版本，虽然自己研究明白解决了，但这个问题已经有同学提过pr了，我还不知道。
+也应该迅速把lab给弄完，不然对lab作业里的坑不熟悉，有同学问的话现场研究就慢了。今天就有同学问test2报错asm找不到的问题，我跟着Makefile走了一路发现是ci-user把项目的riscv依赖重写成本地的很老的版本，虽然自己研究明白解决了，但这个问题已经有同学提过pr了，我还不知道。
 
 前几天打印的两本risc (privileged) spec到了。
 
