@@ -4,8 +4,21 @@
 
 ## 记录
 
-## Day10 2022/7/14
+## Day11 2022/7/16
+- 看riscv privileged spec。
 
+## Day11 2022/7/15
+- 重新弄了个跟rCore Tutorial的[repo](https://github.com/whfuyn/rcore-os)，一切按照自己的想法来做。
+- 把gdb调试的环境弄好了，包括gdb-dashboard和相关的Makefile。
+
+这里踩了一堆坑，freedom-tools预编译的那个riscv toolchain里的gdb执行gdb-dashboard的python脚本会报错，自己编译的时候Makefile里有个动态链接库的检查过不了，折腾了半天都不行，最后跟的[另一个教程](http://rcore-os.cn/rCore-Tutorial-deploy/docs/pre-lab/gdb.html)编了官方的gdb才可以了。
+
+## Day10 2022/7/14
+在rustsbi-qemu里看到它通过parse一个opaue获取设备信息，就去看了device tree spec，看完了前面的介绍和一些property的介绍。这部分需要一些硬件的知识，我不太熟悉。
+
+看了riscv privileged spec前面的一部分。
+
+trap handler相关的内容有点忘了，复习了一下。
 
 ### Day8-9 2022/7/12 - 2022/7/13
 间歇性堕落，荒废几天，状态很糟糕。
