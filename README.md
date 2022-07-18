@@ -2,10 +2,33 @@
 
 参加2022开源操作系统训练营的学习日记。
 
+[参考资料](#参考资料)
+
 ## 记录
 
+## Day13 2022/7/18
+目标：
+- 完成第三章的代码。
+
+
+## Day12 2022/7/17
+把batch os那部分完成了。虽然那章的教程早就看完了，但是实际自己写了才知道还有很多没有完全理解的地方，比如：
+- __restore是怎么同时作为trap_handler调用后的恢复和怎么作为app初始化的环境恢复的。
+- 为什么trap_handler要返回一个&mut TrapContext。
+- KERNEL_STACK和USER_STACK是怎么使用的，它们是在什么时候被设置上去的。
+
+还有之前一个没答好的问题：
+> 输出结果看上去有一些混乱，原因是用户程序的每个 println! 往往会被拆分成多个 sys_write 系统调用提交给内核。有兴趣的同学可以参考 println! 宏的实现。
+
+有同学问这里为什么会拆成多个系统调用，实际上是因为write_fmt在有`{}`参数的时候会分别打印每个参数，每次都调用一下write_str, write_str里再调sys_write。
+
 ## Day11 2022/7/16
-- 看riscv privileged spec。
+- 花了很多时间看riscv privileged spec，特别是把trap处理过程和相关的几个CSR仔细看了一遍。
+- 自己写了batch os里用来生成link_app.S的build.rs，把加载APP那部分写了。
+
+Q：为什么delegate到S-mode的trap的SPIE和SPP是往mstatus里写的？
+
+A：因为sstatus是mstatus的子集部分。
 
 ## Day11 2022/7/15
 - 重新弄了个跟rCore Tutorial的[repo](https://github.com/whfuyn/rcore-os)，一切按照自己的想法来做。
@@ -127,9 +150,17 @@ https://riscv.org/technical/specifications/
 
 - [riscv spec](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf)
 - [riscv privileged spec](https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf)
+- [riscv aclint spec](https://github.com/riscv/riscv-aclint/releases/download/v1.0-rc4/riscv-aclint-1.0-rc4.pdf)
+- [device tree spec](https://github.com/devicetree-org/devicetree-specification/releases/download/v0.4-rc1/devicetree-specification-v0.4-rc1.pdf)
 
 ### 汇编
-- [riscv汇编参考 1](https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html)
-- [riscv汇编参考 2](https://shakti.org.in/docs/risc-v-asm-manual.pdf)
-- [riscv汇编参考 3](https://github.com/riscv-non-isa/riscv-asm-manual/blob/master/riscv-asm.md)
+https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html
+
+https://shakti.org.in/docs/risc-v-asm-manual.pdf
+
+https://github.com/riscv-non-isa/riscv-asm-manual/blob/master/riscv-asm.md
+
+### QEMU
+
+https://www.qemu.org/docs/master/about/index.html
 
