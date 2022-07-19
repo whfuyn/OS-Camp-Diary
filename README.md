@@ -5,10 +5,49 @@
 [参考资料](#参考资料)
 
 ## 记录
+## Day14 2022/7/19
+继续第三章。
 
 ## Day13 2022/7/18
 目标：
 - 完成第三章的代码。
+--- 
+失败了，这章教程只留了个印象就想开始完全自己搞，于是折磨到自己了。
+### 1.
+实在想不明白要怎么才能优雅地在不同任务之间切换并且安全地共享内核栈，想了两个不那么好的方法：
+- 把`TrapContext`保存一份再恢复。
+- 每个任务单独一段内核栈。
+
+### 2.
+试图用一种更idiomatic的方式声明内嵌汇编里的symbol，然而并不可以。
+
+因为用了`[usize]`，这个类型不是FFI-safe的，用`extern "C"`会报warning，于是改用`extern "Rust"`，这下没有warning了，但怎么想都不对：pointer to DST是两倍的指针大小，其中一个保存长度，这里如果我试图给`app_entries`取引用，那rustc不可能知道`app_entries`有多长。
+
+```rust
+// _app_info_table:
+//     .quad 1
+//     .quad app_0_start
+//     .quad app_0_end
+global_asm!(include_str!("link_app.S"));
+extern "Rust" {
+    static _app_info_table: &'static AppInfoTable;
+}
+
+#[repr(C)]
+pub struct AppInfoTable {
+    num_app: usize,
+    app_entries: [usize],
+}
+```
+
+Dicord上的朋友跟我说`extern "Rust"`说明生成这个符号指向的内容的代码也是Rust，没有FFI-safe的问题，我这里实际上是内嵌汇编生成的所以就UB了。然后给了我些建议：
+```
+don't write unsafe code that you don't understand the precise meaning of
+```
+```
+in general, re: embedded programming, if you know how this is done in C, the solution is to stop doing it differently, and instead do it about the same. 
+```
+OK，我记住了。
 
 
 ## Day12 2022/7/17
