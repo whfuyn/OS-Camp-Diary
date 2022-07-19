@@ -21,6 +21,47 @@
 
 猜了一下感觉是哪里把保存下来的东西覆盖了，对着代码瞪了半天，发现把MAX_APP_SIZE写小了，改大以后就正常了。
 
+---
+
+刚提交完代码，回来重跑一遍发现它又炸了。
+
+浪费了很多时间才发现是因为提交的时候加了个.gitignore把user-lib里的linker.ld忽略掉了，于是即使在user-lib/build.rs里加了rerun-if-changed=src/linker.ld也没用，os的build.rs重编译user-lib里的bin的时候linker.ld只会生成一次，所以生成的代码里的位置和加载的位置就不一致了。
+
+---
+
+实现思路是这样的:
+
+初始化的时候在TaskContext里把各自的内核栈设置上，返回地址设置成公用的开始函数。
+```rust
+tcb.status = TaskStatus::Running;
+tcb.cx.sp = KERNEL_STACK[i].get_sp() as usize;
+tcb.cx.ra = start_task as usize;
+```
+
+start_task通过全局的task_mgr得知当前的任务id，加载任务并启动，启动的方式和batch os差不多，不过这里在运行时kernel stack已经由__switch的时候设置好了。
+```rust
+pub unsafe extern "C" fn start_task() {
+    let task_mgr = TASK_MANAGER.lock();
+    let current_task = task_mgr.current_task;
+    task_mgr.load_task(current_task);
+    let task_entry = get_task_base(current_task);
+    drop(task_mgr);
+
+    let mut task_init_trap_cx = TrapContext::app_init_context(
+        task_entry as usize, USER_STACK[current_task].get_sp() as usize
+    );
+
+    // We are already in our kernel stack. Don't need to push context to kernel stack.
+    __restore(
+        &mut task_init_trap_cx as *mut TrapContext as usize
+    );
+}
+```
+
+---
+
+好了，现在回去仔细看看教程里具体是怎么实现的吧。
+
 ## Day13 2022/7/18
 目标：
 - 完成第三章的代码。
