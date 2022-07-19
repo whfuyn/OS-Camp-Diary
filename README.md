@@ -6,7 +6,20 @@
 
 ## 记录
 ## Day14 2022/7/19
-继续第三章。
+翻了一下教程的代码，结果发现它就是每个任务一个内核栈……
+
+上当了，还以为有什么特殊的技巧能复用内核栈在那折腾半天……真是折磨自己。
+
+想想也很合理，这是最简单的做法。快把它写完吧。
+
+---
+
+不容易啊，终于自己写完了coop os。
+
+中途发现3个APP跑着跑着突然炸了两个，剩下一个没事。
+跟着gdb看了半天，发现它恢复到第一个执行的任务的时候，__restore里sret跳转到一个全是uimp的地方，所以就炸了。
+
+猜了一下感觉是哪里把保存下来的东西覆盖了，对着代码瞪了半天，发现把MAX_APP_SIZE写小了，改大以后就正常了。
 
 ## Day13 2022/7/18
 目标：
@@ -41,12 +54,11 @@ pub struct AppInfoTable {
 ```
 
 Dicord上的朋友跟我说`extern "Rust"`说明生成这个符号指向的内容的代码也是Rust，没有FFI-safe的问题，我这里实际上是内嵌汇编生成的所以就UB了。然后给了我些建议：
-```
-don't write unsafe code that you don't understand the precise meaning of
-```
-```
-in general, re: embedded programming, if you know how this is done in C, the solution is to stop doing it differently, and instead do it about the same. 
-```
+
+> don't write unsafe code that you don't understand the precise meaning of
+
+> in general, re: embedded programming, if you know how this is done in C, the solution is to stop doing it differently, and instead do it about the same. 
+
 OK，我记住了。
 
 
