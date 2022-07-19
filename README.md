@@ -33,6 +33,7 @@
 
 初始化的时候在TaskContext里把各自的内核栈设置上，返回地址设置成公用的开始函数。
 ```rust
+// 只有Running和Exited两种状态
 tcb.status = TaskStatus::Running;
 tcb.cx.sp = KERNEL_STACK[i].get_sp() as usize;
 tcb.cx.ra = start_task as usize;
@@ -57,10 +58,13 @@ pub unsafe extern "C" fn start_task() {
     );
 }
 ```
+好了，现在回去仔细看看教程里具体是怎么实现的吧。
 
 ---
+看完了，基本差不多，教程里是直接把ra设置成__restore，然后trap context直接就在kerenl stack上。
 
-好了，现在回去仔细看看教程里具体是怎么实现的吧。
+这样做优雅不少。我做的时候没有意识到可以把__restore开头的`mv sp, a0`删掉，还想着要怎么才能把trap context传给__restore，最后选择了在APP开始前搞些额外的工作把trap context弄好传给__restore。
+
 
 ## Day13 2022/7/18
 目标：
