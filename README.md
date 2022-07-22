@@ -5,6 +5,33 @@
 [参考资料](#参考资料)
 
 ## 记录
+
+## Day17 2022/7/22
+...
+
+## Day16 2022/7/21
+昨天在rustsbi-qemu的提问有回复了，很快就修复了，[PR](https://github.com/rustsbi/rustsbi-qemu/pull/27)。
+
+看起来像是set_timer里没有开mie.mtip，所以中断没有在m态下收到，也就没有转发给s态。
+
+这里发现了个值得一看的代码逻辑——如何实现m->s中断转发，关键就在[execute_supervisor](https://github.com/rustsbi/rustsbi-qemu/blob/4b8aed51f01196860cb624f92db41e80e0ebc59b/rustsbi-qemu/src/execute.rs#L11)。
+
+核心是`m_to_s`会保存在`execute_supervisor`调用它时写的返回地址ra，作为trap_handler的`s_to_m`里会把ra恢复再ret，于是就从调用`m_to_s`的地方返回，那下面就是trap处理流程，把mip里的m态pending清了，设置上s态的pending。
+
+## Day15 2022/7/20
+做分时调度。这个功能本身比较容易，只是加了个时钟中断相关的处理，出现时钟中断就切任务。
+
+但是调了半天都收不到时钟中断，和教程代码对比也看不出错来。
+在gdb里发现sip.stip一直是0，但是mip.mtip是1，测试了一下在不设置timer的情况下mip.mtip是不会有值的。
+
+考虑是不是底层rustsbi-qemu的问题，换成教程里的rustsbi-qemu.bin以后就正常了。
+
+准备报bug，发现已经有相关的issue了(rustsbi-qemu #22)，就在相关的[PR](https://github.com/rustsbi/rustsbi-qemu/pull/23#issuecomment-1190192694)里问了一下。
+
+---
+
+前几天的提问也有同学[回答](https://github.com/rcore-os/rCore-Tutorial-Book-v3/issues/97#issuecomment-1190068080)了，这样交叉确认了一下理解，整个概念清晰了很多。
+
 ## Day14 2022/7/19
 翻了一下教程的代码，结果发现它就是每个任务一个内核栈……
 
