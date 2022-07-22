@@ -7,7 +7,55 @@
 ## 记录
 
 ## Day17 2022/7/22
-...
+
+把代码迁移到lab3，但发现lab3需要一些额外的syscall，就去把这些syscall做了。
+
+踩了一大堆坑：
+### 1
+lab3里要记录syscall调用次数，用的是一个数组([usize; 512])存着，然后每个任务都有一个。
+运行时发现直接卡住不动，调试发现一直在循环进__all_traps，mcause = 0b1001。
+想了一下应该是初始栈爆了，调大以后可以了，但不太理解为啥mcause是这个值。
+
+看了一下教程，里面没有调初始栈，但是多了alloc，标准做法应该是把syscall的统计数组放在堆上吧。
+
+### 2
+```rust
+let t1 = get_time() as usize;
+let mut info = TaskInfo::new();
+get_time();
+sleep(500);
+let t2 = get_time() as usize;
+assert_eq!(0, task_info(&mut info));
+// 这里一直炸，t2 - t1是500，但是info.time只有480
+assert!(t2 - t1 <= info.time + 1);
+```
+这个测试用例折磨了很久才弄明白。我的get_time是这样算的：
+```rust
+time_val.sec = t / time::CLOCKS_PER_SEC;
+time_val.usec = t % time::CLOCKS_PER_SEC / time::CLOCKS_PER_MICRO_SEC;
+```
+我的task_info.time是这样算的：
+```rust
+task_info.time = stat.real_time() / time::CLOCKS_PER_MILLI_SEC;
+```
+但是，CLOCKS_PER_MICRO_SEC算出来是12，而精确值是12.5……
+```rust
+pub const CLOCK_FREQ: usize = 12500000;
+pub const CLOCKS_PER_MICRO_SEC: usize = CLOCK_FREQ / 1_000_000;
+```
+心疼自己的时间。
+
+### 3
+还是上面那个测试用例，测试时发现这里的get time syscall调用次数是0。
+```rust
+assert!(3 <= info.syscall_times[SYSCALL_GETTIMEOFDAY]);
+```
+研究了半天发现是因为我的TaskInfo是加了#[reper(C)]的，教程的测试用例没加。
+
+---
+
+看了眼第四章的开头，感觉虚拟内存这部分不看教程自己写应该也能写出来，我试试。
+
 
 ## Day16 2022/7/21
 昨天在rustsbi-qemu的提问有回复了，很快就修复了，[PR](https://github.com/rustsbi/rustsbi-qemu/pull/27)。
@@ -17,6 +65,8 @@
 这里发现了个值得一看的代码逻辑——如何实现m->s中断转发，关键就在[execute_supervisor](https://github.com/rustsbi/rustsbi-qemu/blob/4b8aed51f01196860cb624f92db41e80e0ebc59b/rustsbi-qemu/src/execute.rs#L11)。
 
 核心是`m_to_s`会保存在`execute_supervisor`调用它时写的返回地址ra，作为trap_handler的`s_to_m`里会把ra恢复再ret，于是就从调用`m_to_s`的地方返回，那下面就是trap处理流程，把mip里的m态pending清了，设置上s态的pending。
+
+话说这里好像没法直接让s态收到时钟中断，必须从m态转一下？因为没有听说有个stimecmp。
 
 ## Day15 2022/7/20
 做分时调度。这个功能本身比较容易，只是加了个时钟中断相关的处理，出现时钟中断就切任务。
