@@ -5,14 +5,96 @@
 [参考资料](#参考资料)
 
 ## 记录
+## Day20 2022/7/25
+犹豫了半天是照着教程做还是按自己的想法做，要是按自己的想法做很可能赶不上进度。
+
+最后还是选择按自己的想法做，赶不上进度只能说自己太菜了，也是没办法的事情，别急慢慢来。
+
+---
+
+昨天问了一下分享的那位同学，内核加载地址和编译的基址不一样的话，在跳转到正确的基址之前还能不能调用函数、跳转到符号。得到的回答是不一定能，得看跳转编译成什么样，同时提出了一个思路：编译一个地址无关的再把内核加载上。
+
+我准备采取这个思路，我先编译一个loader，base addr在0x80200000，这样初始化函数里跳转就是安全的，然后把base addr在高位的内核当成数据嵌进去，初始化函数再把内核所在的物理页映射到高位。注意这里为了切satp的时候跳转平滑，需要给当前loader的代码地址做个恒等映射。
+
+---
+页表操作这部分有点tricky，几十行代码写了好久。还有page table里的一些数据结构的接口设计，改了好多遍都不满意，凑合用了。
+
+把恒等映射写完了，跑了一下居然没有跑飞，太感动了。
+
+很糙，随便看看。
+```rust
+    let mut loader_va = VirtAddr::new(sloader as usize);
+    let mut loader_pa = PhysAddr::new(sloader as usize);
+    while loader_va.0 < eloader as usize {
+        let loader_vpn = loader_va.vpn();
+        let mut loader_ppn = loader_pa.ppn();
+        loader_ppn.set_level(0, 0);
+
+        let pte = PageTableEntry::leaf(
+            loader_ppn, 
+            PteFlags::VALID | PteFlags::READ | PteFlags::WRITE | PteFlags::EXECUTE,
+        );
+        
+        unsafe {
+            KERNEL_SUB_PAGE_TABLE.set_entry(loader_vpn.level(1), pte);
+        }
+
+        // 2 MiB
+        loader_va.0 += 2 * 1024 * 1024;
+        loader_pa.0 += 2 * 1024 * 1024;
+    }
+    unsafe {
+        let loader_vpn = VirtAddr::new(sloader as usize).vpn();
+        let sub_table_ppn = KERNEL_SUB_PAGE_TABLE.pa().ppn();
+        let pte = PageTableEntry::parent(sub_table_ppn, PteFlags::VALID);
+        KERNEL_ROOT_PAGE_TABLE.set_entry(loader_vpn.level(2), pte);
+    }
+    unsafe {
+        satp::set(Mode::Sv39, 0, KERNEL_ROOT_PAGE_TABLE.pa().ppn().as_usize());
+        riscv::asm::sfence_vma_all();
+    }
+    println!("still alive");
+```
+
+
+## Day19 2022/7/24
+感觉自己进度太慢了，再自己瞎折腾又要很久，加上晚上有同学要讲页表，赶忙把第四章看完了。
+---
+
+晚上参加了训练营的学习分享会，非常棒，刚好讲的内容就是我想知道的：
+- 不使用额外页表实现的内核（单页表）。这就是我之前想的思路，OS放在高位，这样trap handler不用切satp。把我没想清楚的很多细节给讲明白了，包括内核在高位具体要多高、内核的base addr在高位的话开局被加载到0x80200000怎么办等等。
+- 多核下启动时的初始状态。不意外，刚启动的时候只有一个核在跑，然后去唤醒其它核。一直找不到哪里有资料说明这点，能确认一下感觉好多了。
+- 设备树。距离上次看有点久了，reg怎么解读都有点忘了，这次讲了刚好复习一下，而且还有个具体的qemu的设备树例子。
+
+## Day18 2022/7/23
+想了一想虚拟内存应该怎么做，一些乱七八糟的想法：
+- 把OS映射在每个应用的高位，并且PA和VA一致，这样trap handler能直接调到，进去以后也能直接访问到内核栈，也就不用每个trap都切换satp了。
+- 在OS的linker script里把base address设置的高一点（能多高？）。
+- 知道能访问的物理内存范围，把它按页作为资源管理起来。
+- 每个任务要有个堆的开始和结束指针，从加载完的bss后面开始，不用很精细，空个够大的就行。
+- 为任务分配动态内存的时候，先知道分配的VA范围，再找页资源管理拿能容纳那么多范围的页（不一定要连续）。这里可以考虑优先用大的页，不一定都要按照最小的页分配，因为任何一级页表都可以是leaf页表，只要它是valid的并且R或X不为0。
+- 应用的栈映射在OS下面一点，开局先分配一个页。
+- 应用加载在低地址，按应用的大小给页。
+- 内核栈也在高位地址分配一个页吧。
+- 要想清楚页表怎么操作。
+- 任务切换的时候从全局数据读取到下一个任务的satp，__restore的时候恢复过去。
+- 开局的时候要怎么做呢。
+
+。。。
+
+突然在群里看到明天有同学要分享页表相关的内容，我是不是应该先把地址空间这章看完省得到时候听不懂？
+
+---
+
+page table写了个开头，发现rcore-os/riscv里有相关的实现（但是官方的crate没有），我还要不要继续写呢？写吧。
+
 
 ## Day17 2022/7/22
-
-把代码迁移到lab3，但发现lab3需要一些额外的syscall，就去把这些syscall做了。
+把代码迁移到lab1-os3，但发现lab1-os3需要一些额外的syscall，就去把这些syscall做了。
 
 踩了一大堆坑：
 ### 1
-lab3里要记录syscall调用次数，用的是一个数组([usize; 512])存着，然后每个任务都有一个。
+lab3里要记录syscall调用次数，用的是一个数组`[usize; 512]`存着，然后每个任务都有一个。
 运行时发现直接卡住不动，调试发现一直在循环进__all_traps，mcause = 0b1001。
 想了一下应该是初始栈爆了，调大以后可以了，但不太理解为啥mcause是这个值。
 
