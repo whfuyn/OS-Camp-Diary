@@ -7,6 +7,57 @@
 [参考资料](#参考资料)
 
 ## 记录
+
+## Day30 2022/8/5
+在看kvm相关的资料。
+
+## Day28-29 2022/8/3-4
+看了一下io_uring的[论文](https://kernel.dk/io_uring.pdf)，意思大概看明白了。
+
+又去翻了一下rust的io_uring那个crate，跑样例的时候发现WSL不支持io_uring。
+研究了一下，似乎是WSL用的linux内核没有开io_uring的支持，得自己重新编译。
+
+在这里记录一下做法：
+
+1. 在release里下载wsl2的[内核源码](https://github.com/microsoft/WSL2-Linux-Kernel)
+2. 在`WSL2-Linux-Kernel/Microsoft/config-wsl`里把`CONFIG_DEBUG_INFO_BTF=y`改成n，不然编译会报错。
+    > FAILED: load BTF from vmlinux: No such file or directory
+    > make: *** [Makefile:1164: vmlinux] Error 255
+    > make: *** Deleting file 'vmlinux
+3. 编译内核。
+```
+$ sudo apt install build-essential flex bison dwarves libssl-dev libelf-dev
+$ make KCONFIG_CONFIG=Microsoft/config-wsl
+```
+4. 把编译好的vmlinux（在WSL2-Linux-Kernel目录下）拷贝到Windows的目录里。
+5. 在Windows的Home目录下的.wslconfig里设置kernel，例如：
+    ```
+    kernel=C:\\Users\\your-user-name\\vmlinux
+    ```
+6. 重启wsl。
+    ```
+    wsl --shutdown
+    wsl
+    ```
+完成了以后可以`uname -a`看看是否符合预期。
+
+---
+
+看了一下《Linux Kernel Development》里讲kernel object和kernel module的部分。
+
+---
+
+晚上在听技术报告会。
+
+## Day27 2022/8/2
+在看zCore的论文和实现，感觉大致上看明白了，不过还有些细节。
+
+晚上参加ydr同学的分享，讲多核启动，听完发现以前有很多细节没明白，这部分逻辑比之前想的要复杂，又看了好一会儿，这下感觉懂了。
+
+后面讲的两个展望也挺有意思的：
+- RustSBI不止为S模式，也可以为U模式提供服务。
+- RustSBi可以放弃M模式、放弃自身，像bootloader一样加载其它程序替代自己
+
 ## Day26 2022/8/1
 昨天睡晚了，今天一天状态都很差，下午在写分享的稿子，一晚上都在参加训练营的总结会。
 
