@@ -8,6 +8,37 @@
 
 ## 记录
 
+## Day50 2022/8/25
+
+我回来了。
+
+---
+
+## Day35 2022/8/10
+（8/25）记录的一些脚本，大概是在编译out-of-tree module和运行riscv linux吧，记不得了。
+
+```
+RUST_MODFILE=samples/rust/rust_miscdev
+
+rustc --edition=2021
+-Zbinary_dep_depinfo=y -Dunsafe_op_in_unsafe_fn -Drust_2018_idioms -Dunreachable_pub -Dnon_ascii_idents -Wmissing_docs -Drustdoc::missing_crate_level_docs -Dclippy::correctness -Dclippy::style -Dclippy::suspicious -Dclippy::complexity -Dclippy::perf -Dclippy::let_unit_value -Dclippy::mut_mut -Dclippy::needless_bitwise_bool -Dclippy::needless_continue -Wclippy::dbg_macro --target=./rust/target.json -Cpanic=abort -Cembed-bitcode=n -Clto=n -Cforce-unwind-tables=n -Ccodegen-units=1 -Csymbol-mangling-version=v0 -Crelocation-model=static -Zfunction-sections=n -Dclippy::float_arithmetic -Ctarget-cpu=generic-rv64 -Copt-level=2 -Cdebug-assertions=y -Coverflow-checks=y -Cforce-frame-pointers=y @./include/generated/rustc_cfg -Zallow-features=allocator_api,bench_black_box,core_ffi_c,generic_associated_types,const_ptr_offset_from,const_refs_to_cell -Zcrate-attr=no_std -Zcrate-attr=feature(allocator_api,bench_black_box,core_ffi_c,generic_associated_types,const_ptr_offset_from,const_refs_to_cell) --extern alloc --extern kernel --crate-type rlib --out-dir samples/rust -L ./rust/ --crate-name rust_miscdev
+```
+
+```
+make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- O=build
+
+make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-  KDIR=../rust-for-linux
+```
+
+https://zhuanlan.zhihu.com/p/258394849
+
+```
+qemu-system-riscv64 -M virt -m 256M -nographic -kernel build/arch/riscv/boot/Image -drive file=rootfs.img,format=raw,id=hd0  -device virtio-blk-device,drive=hd0 -append "root=/dev/vda rw console=ttyS0"
+```
+
+## Day31-34 2022/8/6-9
+<del>失忆</del>
+
 ## Day30 2022/8/5
 在看kvm相关的资料。
 
@@ -36,12 +67,14 @@ $ make KCONFIG_CONFIG=Microsoft/config-wsl
     ```
 6. 重启wsl。
     ```
-    wsl --shutdown
-    wsl
+    $ wsl --shutdown
+    $ wsl
     ```
 完成了以后可以`uname -a`看看是否符合预期。
 
 ---
+
+把教程的第六章和第七章看完了。
 
 看了一下《Linux Kernel Development》里讲kernel object和kernel module的部分。
 
@@ -537,6 +570,10 @@ TODO: 写一篇文章总结riscv特权架构。
 
 
 ## 参考资料
+
+[在 QEMU 上运行 RISC-V 64 位版本的 Linux](https://zhuanlan.zhihu.com/p/258394849)
+
+[Writing Linux Kernel Modules in Rust](https://www.youtube.com/watch?v=-l-8WrGHEGI)
 
 [RISC-V ELF psABI Document](https://github.com/riscv-non-isa/riscv-elf-psabi-doc)
 
